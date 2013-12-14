@@ -3,42 +3,16 @@ local lg = love.graphics
 local Class = require 'lib.hump.class'
 local Vector = require 'lib.hump.vector'
 
-local function createGrid(x, y, rows, columns, size)
+local function convert(ms)
+    local r, c = 0, 0
     local grid = {}
 
-    for r = 0, rows - 1 do
+    for line in ms:gmatch'[^\n]+' do
+        c = 0
         grid[r] = {}
 
-        for c = 0, columns - 1 do
-            grid[r][c] = false
-        end
-    end
-
-    return grid
-end
-
-local Screen = Class{}
-function Screen:init(rows, columns, size, x, y)
-    self.position = Vector(x or 0, y or 0)
-    self.dimensions = Vector(rows, columns)
-    self.size = size
-    self._grid = createGrid(
-        self.position.x,
-        self.position.y,
-        rows,
-        columns,
-        size)
-    self.repeats = {}
-end
-
-function Screen:set(hs)
-    local r, c = 0, 0
-
-    for line in hs:gmatch('[^\n]+') do
-        c = 0
-
-        for ch in line:gmatch('%d') do
-            self._grid[r][c] = tonumber(ch) == 1
+        for ch in line:gmatch'%d' do
+            grid[r][c] = tonumber(ch) == 1
 
             c = c + 1
         end
@@ -46,37 +20,41 @@ function Screen:set(hs)
         r = r + 1
     end
 
-    --[[
-    self._canvas:renderTo(function ()
-        for r = 0, self.dimensions.x - 1 do
-            for c = 0, self.dimensions.y - 1 do
-                if self._grid[r][c] then
-                    lg.setColor(255, 255, 255)
-                    lg.rectangle(
-                        'fill',
-                        c * self.size,
-                        r * self.size,
-                        self.size,
-                        self.size)
-                end
+    return grid, r, c
+end
 
-                lg.setColor(100, 100, 100)
-                lg.rectangle(
-                    'line',
-                    c * self.size,
-                    r * self.size,
-                    self.size,
-                    self.size)
+local Screen = Class{}
+function Screen:init(ms, size, x, y)
+    local grid, rows, columns = convert(ms)
+
+    self.position = Vector(x, y)
+    self.dimensions = Vector(rows, columns)
+    self.ms = ms
+    self.size = size
+    self._grid = grid
+    self.repeats = {}
+end
+
+function Screen:setPosition(x, y)
+    self.position = Vector(x, y)
+end
+
+function Screen:isComplete()
+    for r = 0, self.dimensions.x - 1 do
+        for c = 0, self.dimensions.y - 1 do
+            if not self._grid[r][c] then
+                return false
             end
         end
-    end)
-    ]]
+    end
+
+    return true, #self.repeats
 end
 
 function Screen:applyPlank(plank)
     -- Clone the plank position
     local ppos = plank.position:clone()
-    local pw, ph = plank:getDimensions()
+    local pw, ph = plank:getTetrominoDimensions()
 
     -- Offset the plank position by the screen position
     ppos = ppos - self.position
@@ -87,7 +65,7 @@ function Screen:applyPlank(plank)
     for r = 0, 1 do
         for c = 0, 3 do
             if plank.grid[r][c] then
-                local nr, nc = plank:rotateCoordinates(r, c)
+                local nr, nc = plank:transformCoordinates(r, c)
 
                 if self._grid[pr + nr][pc + nc] then
                     table.insert(self.repeats, Vector(pr + nr, pc + nc))
@@ -100,7 +78,7 @@ function Screen:applyPlank(plank)
 end
 
 function Screen:draw()
-    --lg.draw(self._canvas, self.position.x, self.position.y)
+    lg.setLineWidth(1)
 
     for r = 0, self.dimensions.x - 1 do
         for c = 0, self.dimensions.y - 1 do
@@ -112,10 +90,10 @@ function Screen:draw()
 
             lg.rectangle(
                 'fill',
-                c * self.size,
-                r * self.size,
-                self.size,
-                self.size)
+                (self.position.x + c * self.size) - 1,
+                (self.position.y + r * self.size) - 1,
+                self.size - 2,
+                self.size - 2)
         end
     end
 
@@ -123,22 +101,10 @@ function Screen:draw()
         lg.setColor(0, 0, 255)
         lg.rectangle(
             'fill',
-            v.y * self.size,
-            v.x * self.size,
-            self.size,
-            self.size)
-    end
-
-    for r = 0, self.dimensions.x - 1 do
-        for c = 0, self.dimensions.y - 1 do
-            lg.setColor(100, 100, 100)
-            lg.rectangle(
-                'line',
-                c * self.size,
-                r * self.size,
-                self.size,
-                self.size)
-        end
+            (self.position.x + v.y * self.size) - 1,
+            (self.position.y + v.x * self.size) - 1,
+            self.size - 2,
+            self.size - 2)
     end
 end
 

@@ -1,48 +1,23 @@
-local lg = love.graphics
-local lm = love.mouse
+local Gamestate = require 'lib.hump.gamestate'
+local Timer = require 'lib.hump.timer'
 
-local Screen = require 'src.objects.screen'
-local Plank = require 'src.objects.plank'
+local Play = require 'src.states.play'
 
 function love.load()
-    s = Screen(10, 10, 50)
-    s:set[[
-        1 1 1 1 1 1 1 1 1 1
-        1 1 0 1 1 1 0 0 0 1
-        1 0 0 0 1 0 0 0 1 1
-        1 0 0 0 0 0 0 0 1 1
-        1 1 0 0 0 0 0 0 0 1
-        1 1 0 0 0 0 0 0 0 1
-        1 1 1 0 0 0 0 0 0 1
-        1 1 0 0 0 0 0 0 0 1
-        1 1 1 0 0 0 0 1 1 1
-        1 1 1 1 1 1 1 1 1 1]]
-
-    p = Plank(lg.getWidth() / 2, lg.getHeight(), 50,
-    [[1111
-      1000]])
+    Gamestate.registerEvents()
+    Gamestate.switch(Play)
 end
 
 function love.update(dt)
-    p.position.x = lm.getX()
-    p.position.y = lm.getY()
+    Timer.update(dt)
 end
 
 function love.draw()
-    lg.setColor(255, 255, 255)
-
-    s:draw()
-    p:draw()
+    love.graphics.setColor(255, 255, 255)
 end
 
 function love.keypressed(key, code)
     if key == 'escape' then
         love.event.quit()
     end
-
-    p:keypressed(key, code)
-end
-
-function love.mousepressed(x, y, button)
-    s:applyPlank(p)
 end
