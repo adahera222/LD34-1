@@ -1,15 +1,21 @@
 local Gamestate = require 'lib.hump.gamestate'
 local Timer = require 'lib.hump.timer'
+local Tween = require 'lib.tween.tween'
 
-local Play = require 'src.states.play'
+local Title = require 'src.states.title'
 
 function love.load()
+    local font =
+        love.graphics.setFont(
+            love.graphics.newFont('assets/fonts/Minercraftory.ttf'))
+
     Gamestate.registerEvents()
-    Gamestate.switch(Play)
+    Gamestate.switch(Title)
 end
 
 function love.update(dt)
     Timer.update(dt)
+    Tween.update(dt)
 end
 
 function love.draw()

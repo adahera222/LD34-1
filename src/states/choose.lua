@@ -3,13 +3,13 @@ local lg = love.graphics
 local Gamestate = require 'lib.hump.gamestate'
 local Timer = require 'lib.hump.timer'
 
-local Plank = require 'src.objects.plank'
 local Screen = require 'src.objects.screen'
+local Tetromino = require 'src.aesthetics.tetromino'
 
 local Choose = {}
 
 function Choose:init()
-    self.tetrominos = {
+    self.ts = {
         [[1111
           0000]],
         [[1110
@@ -23,49 +23,62 @@ function Choose:init()
     }
 
     self.plate = {
-        x = lg.getWidth() / 2 - lg.getWidth() / 4,
-        y = lg.getHeight() / 2 - lg.getHeight() / 4,
-        w = lg.getWidth() / 2,
-        h = lg.getWidth() / 2,
+        x = lg.getWidth() / 3,
+        y = lg.getHeight() / 4,
+        w = lg.getWidth() / 3,
+        h = lg.getHeight() / 2,
     }
 end
 
-function Choose:enter(previous, ms, background)
+function Choose:enter(previous, background)
     print('Entering Choose...')
 
     self.previous = previous
     self.background = background
 
-    self.screen = Screen(ms, 15, 200, 200)
-
     self.selected = -1
     self.chosen = {}
 
-    for i,v in ipairs(self.tetrominos) do
+    for i,v in ipairs(self.ts) do
         self.chosen[i] = v
     end
 
     table.remove(self.chosen, math.random(#self.chosen))
     table.remove(self.chosen, math.random(#self.chosen))
 
-    self.planks = {}
-    for i,v in ipairs(self.chosen) do
-        self.planks[i] = Plank(
-            self.plate.x + 65 * (i + 1) - 55,
-            self.plate.y + 50,
-            15,
-            v)
-    end
+    local tw = self.plate.w / 6
+    local th = self.plate.h / 10
+    self.tetrominos = {
+        Tetromino(
+            self.plate.x + tw,
+            self.plate.y + th,
+            tw,
+            th,
+            self.chosen[1]),
+        Tetromino(
+            self.plate.x + tw,
+            self.plate.y + th * 4,
+            tw,
+            th,
+            self.chosen[2]),
+        Tetromino(
+            self.plate.x + tw,
+            self.plate.y + th * 7,
+            tw,
+            th,
+            self.chosen[3]),
+    }
 end
 
 function Choose:leave()
     print('Leaving Choose...')
 
-    return self.planks[self.selected].ps
+    self.previous.as:start()
+
+    return self.tetrominos[self.selected].ps
 end
 
 function Choose:update(dt)
-    self.background:update(dt)
 end
 
 function Choose:draw()
@@ -88,17 +101,15 @@ function Choose:draw()
 
     if self.selected ~= -1 then
         local x, y, w, h =
-            self.planks[self.selected]:getCanvasBox()
-
-        lg.setColor(50, 50, 50)
-        lg.rectangle('fill', x, y, w, h)
+            self.tetrominos[self.selected]:getBoundingBox()
+        lg.setColor(200, 200, 200)
+        lg.rectangle('line', x, y, w, h)
     end
 
-    for _, plank in ipairs(self.planks) do
-        plank:draw()
+    lg.setColor(255, 0, 0)
+    for _, tetromino in ipairs(self.tetrominos) do
+        tetromino:draw()
     end
-
-    self.screen:draw()
 end
 
 function Choose:keypressed(key, code)
@@ -108,8 +119,8 @@ function Choose:keypressed(key, code)
 end
 
 function Choose:mousepressed(x, y, button)
-    for i, plank in ipairs(self.planks) do
-        local px, py, pw, ph = plank:getCanvasBox()
+    for i, tetromino in ipairs(self.tetrominos) do
+        local px, py, pw, ph = tetromino:getBoundingBox()
 
         if px <= x and x <= px + pw and
            py <= y and y <= py + ph then
@@ -117,9 +128,6 @@ function Choose:mousepressed(x, y, button)
             break
         end
     end
-end
-
-function Choose:quit()
 end
 
 return Choose

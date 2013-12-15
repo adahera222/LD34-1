@@ -31,7 +31,7 @@ function Screen:init(ms, size, x, y)
     self.dimensions = Vector(rows, columns)
     self.ms = ms
     self.size = size
-    self._grid = grid
+    self.grid = grid
     self.repeats = {}
 end
 
@@ -42,7 +42,7 @@ end
 function Screen:isComplete()
     for r = 0, self.dimensions.x - 1 do
         for c = 0, self.dimensions.y - 1 do
-            if not self._grid[r][c] then
+            if not self.grid[r][c] then
                 return false
             end
         end
@@ -53,7 +53,7 @@ end
 
 function Screen:applyPlank(plank)
     -- Clone the plank position
-    local ppos = plank.position:clone()
+    local ppos = plank:getPosition():clone()
     local pw, ph = plank:getTetrominoDimensions()
 
     -- Offset the plank position by the screen position
@@ -67,11 +67,11 @@ function Screen:applyPlank(plank)
             if plank.grid[r][c] then
                 local nr, nc = plank:transformCoordinates(r, c)
 
-                if self._grid[pr + nr][pc + nc] then
+                if self.grid[pr + nr][pc + nc] then
                     table.insert(self.repeats, Vector(pr + nr, pc + nc))
                 end
 
-                self._grid[pr + nr][pc + nc] = true
+                self.grid[pr + nr][pc + nc] = true
             end
         end
     end
@@ -82,7 +82,7 @@ function Screen:draw()
 
     for r = 0, self.dimensions.x - 1 do
         for c = 0, self.dimensions.y - 1 do
-            if self._grid[r][c] then
+            if self.grid[r][c] then
                 lg.setColor(255, 255, 255)
             else
                 lg.setColor(0, 0, 0)

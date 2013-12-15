@@ -29,38 +29,9 @@ function Background:init(rows, columns, size)
     self.dimensions = Vector(columns * size, rows * size)
     self.size = size
     self._canvas = createCanvas(rows, columns, size)
-    self._bars = {
-        vertical = -10,
-        horizontal = -10,
-    }
-end
-
-function Background:update(dt)
-    self._bars.vertical =
-        self._bars.vertical + 100 * dt
-    self._bars.horizontal =
-        self._bars.horizontal + 100 * dt
-
-    if self._bars.vertical > lg.getWidth() then
-        self._bars.vertical = -10
-    end
-
-    if self._bars.horizontal > lg.getHeight() then
-        self._bars.horizontal = -10
-    end
 end
 
 function Background:draw()
-    lg.setLineWidth(5)
-
-    lg.setColor(0, 255, 0)
-    lg.line(
-        self._bars.vertical, 0,
-        self._bars.vertical, lg.getHeight())
-    lg.line(
-        0, self._bars.horizontal,
-        lg.getWidth(), self._bars.horizontal)
-
     lg.setColor(255, 255, 255)
     lg.draw(self._canvas)
 end
