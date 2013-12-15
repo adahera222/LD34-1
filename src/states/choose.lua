@@ -74,8 +74,8 @@ function Choose:leave()
     print('Leaving Choose...')
 
     self.previous.as:start()
-
-    return self.tetrominos[self.selected].ps
+    self.previous:setPlank(
+        self.tetrominos[self.selected].ps)
 end
 
 function Choose:update(dt)
@@ -113,9 +113,7 @@ function Choose:draw()
 end
 
 function Choose:keypressed(key, code)
-    if key == ' ' then
-        self.previous:setPlank(Gamestate.pop())
-    end
+    if key == ' ' then Gamestate.pop() end
 end
 
 function Choose:mousepressed(x, y, button)
