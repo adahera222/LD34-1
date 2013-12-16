@@ -12,6 +12,7 @@ function Plank:init(x, y, size, ps)
     self.columns = 4
     self.rotation = 0
     self.flipped = false
+    self.size = size
 
     self.grid = {}
 
@@ -61,16 +62,35 @@ function Plank:rotate(r)
     end
 end
 
-function Plank:getTetrominoDimensions()
-    if self.rotation == 0 or self.rotation == math.pi then
-        return
-            self.tetromino.canvas:getWidth(),
-            self.tetromino.canvas:getHeight()
-    elseif self.rotation == math.pi / 2 or self.rotation == 3 * math.pi / 2 then
-        return
-            self.tetromino.canvas:getHeight(),
-            self.tetromino.canvas:getWidth()
+function Plank:getRotationOffset()
+    local ox, oy = 0, 0
+
+    if self.rotation == 0 then
+        if self.flipped then
+            oy = oy - self.size
+        end
+    elseif self.rotation == math.pi / 2 then
+        if self.flipped then
+            ox = ox + self.size
+        end
+
+        ox = ox + (self.size - self.tetromino.canvas:getHeight())
+    elseif self.rotation == math.pi then
+        if self.flipped then
+            oy = oy + self.size
+        end
+
+        ox = ox + (self.size - self.tetromino.canvas:getWidth())
+        oy = oy + (self.size - self.tetromino.canvas:getHeight())
+    elseif self.rotation == 3 * math.pi / 2 then
+        if self.flipped then
+            ox = ox - self.size
+        end
+
+        oy = oy + self.size - self.tetromino.canvas:getWidth()
     end
+
+    return ox, oy
 end
 
 function Plank:draw()
@@ -81,9 +101,7 @@ function Plank:draw()
         self.tetromino.position.y,
         self.rotation,
         1,
-        self.flipped and -1 or 1,
-        self.tetromino.canvas:getWidth() / 2,
-        self.tetromino.canvas:getHeight() / 2)
+        self.flipped and -1 or 1)
 end
 
 function Plank:keypressed(key, code)

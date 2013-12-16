@@ -55,6 +55,20 @@ function Title:init()
                     h = 2,
                     filled = self._grid[r][c].filled
                 }
+                if r == self.rows - 1 and c == self.columns - 1 then
+                    Tween(
+                        1,
+                        self._grid[r][c],
+                        {
+                            x = c * self.size,
+                            y = r * self.size,
+                            w = self.size,
+                            h = self.size,
+                        },
+                        'inQuad',
+                        Gamestate.switch,
+                        Play)
+                end
                 Tween(
                     1,
                     self._grid[r][c],
@@ -99,7 +113,6 @@ function Title:init()
     self.buttons[1]:setCallback(function()
         self.fbg:start()
         self.fbgflag = true
-        Timer.add(1.1, function () Gamestate.switch(Play) end)
     end)
     self.buttons[2]:setCallback(function () print('No tutorial state yet') end)
     self.buttons[3]:setCallback(function ()

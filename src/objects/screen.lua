@@ -1,110 +1,163 @@
 local lg = love.graphics
 
 local Class = require 'lib.hump.class'
+local Tween = require 'lib.tween.tween'
 local Vector = require 'lib.hump.vector'
 
-local function convert(ms)
-    local r, c = 0, 0
-    local grid = {}
+local Screen = Class{}
+function Screen:init(rows, columns, size, ms)
+    self.rows = rows
+    self.columns = columns
+    self.size = size
+    self.repeats = 0
 
+    self._grid = {}
+    self._fakes = {}
+
+    local r, c = 0, 0
     for line in ms:gmatch'[^\n]+' do
         c = 0
-        grid[r] = {}
+
+        self._grid[r] = {}
 
         for ch in line:gmatch'%d' do
-            grid[r][c] = tonumber(ch) == 1
+            self._grid[r][c] = {
+                x = c * self.size,
+                y = r * self.size,
+                w = self.size,
+                h = self.size,
+                color = { 255, 255, 255, 255 },
+                filled = tonumber(ch) == 1,
+            }
+
+            if not self._grid[r][c].filled then
+                self._grid[r][c].color = { 0, 0, 0, 255 }
+                table.insert(self._fakes, {
+                    x = c * self.size,
+                    y = r * self.size,
+                    w = self.size,
+                    h = self.size,
+                    color = { 255, 255, 255, 255 },
+                })
+            end
 
             c = c + 1
         end
 
         r = r + 1
     end
-
-    return grid, r, c
 end
 
-local Screen = Class{}
-function Screen:init(ms, size, x, y)
-    local grid, rows, columns = convert(ms)
-
-    self.position = Vector(x, y)
-    self.dimensions = Vector(rows, columns)
-    self.ms = ms
-    self.size = size
-    self.grid = grid
-    self.repeats = {}
+function Screen:start()
+    for _,v in ipairs(self._fakes) do
+        local ny = v.y + lg.getHeight()
+        Tween(
+            math.random(1, 5),
+            v,
+            {
+                y = ny,
+                color = {
+                    v.color[1],
+                    v.color[2],
+                    v.color[3],
+                    0
+                },
+            },
+            'inCirc')
+    end
 end
 
-function Screen:setPosition(x, y)
-    self.position = Vector(x, y)
+function Screen:update(dt)
+    for r = 0, self.rows - 1 do
+        for c = 0, self.columns - 1 do
+            self._grid[r][c].hover = false
+        end
+    end
 end
 
 function Screen:isComplete()
-    for r = 0, self.dimensions.x - 1 do
-        for c = 0, self.dimensions.y - 1 do
-            if not self.grid[r][c] then
+    for r = 0, self.rows - 1 do
+        for c = 0, self.columns - 1 do
+            if not self._grid[r][c].filled then
                 return false
             end
         end
     end
 
-    return true, #self.repeats
+    return true, self.repeats
+end
+
+function Screen:getPlankCoordinates(plank)
+    local x, y = plank:getPosition():unpack()
+    local ox, oy = plank:getRotationOffset()
+
+    local pc = math.floor((x + ox) / self.size)
+    local pr = math.floor((y + oy) / self.size)
+
+    return pr, pc
 end
 
 function Screen:applyPlank(plank)
-    -- Clone the plank position
-    local ppos = plank:getPosition():clone()
-    local pw, ph = plank:getTetrominoDimensions()
+    local pr, pc = self:getPlankCoordinates(plank)
 
-    -- Offset the plank position by the screen position
-    ppos = ppos - self.position
-
-    local pc = math.floor((ppos.x - pw / 2) / self.size)
-    local pr = math.floor((ppos.y - ph / 2) / self.size)
-
-    for r = 0, 1 do
-        for c = 0, 3 do
+    for r = 0, plank.rows - 1 do
+        for c = 0, plank.columns - 1 do
             if plank.grid[r][c] then
                 local nr, nc = plank:transformCoordinates(r, c)
 
-                if self.grid[pr + nr][pc + nc] then
-                    table.insert(self.repeats, Vector(pr + nr, pc + nc))
+                local tile = self._grid[pr + nr][pc + nc]
+                if tile.filled then
+                    self.repeats = self.repeats + 1
+                    tile.color = { 0, 0, 255, 255 }
+                else
+                    tile.filled = true
+                    tile.color = { 255, 255, 255, 255 }
                 end
-
-                self.grid[pr + nr][pc + nc] = true
             end
+        end
+    end
+end
+
+function Screen:hover(plank)
+    local pr, pc = self:getPlankCoordinates(plank)
+
+    for r = 0, plank.rows - 1 do
+        for c = 0, plank.columns - 1 do
+            local nr, nc = plank:transformCoordinates(r, c)
+
+            local tile = self._grid[pr + nr][pc + nc]
+            tile.hover = plank.grid[r][c]
         end
     end
 end
 
 function Screen:draw()
-    lg.setLineWidth(1)
+    for r = 0, self.rows - 1 do
+        for c = 0, self.columns - 1 do
+            local tile = self._grid[r][c]
 
-    for r = 0, self.dimensions.x - 1 do
-        for c = 0, self.dimensions.y - 1 do
-            if self.grid[r][c] then
-                lg.setColor(255, 255, 255)
+            if tile.hover then
+                lg.setColor(100, 100, 100)
             else
-                lg.setColor(0, 0, 0)
+                lg.setColor(tile.color)
             end
-
             lg.rectangle(
                 'fill',
-                (self.position.x + c * self.size) - 1,
-                (self.position.y + r * self.size) - 1,
-                self.size - 2,
-                self.size - 2)
+                tile.x + 1,
+                tile.y + 1,
+                tile.w - 2,
+                tile.h - 2)
         end
     end
 
-    for _,v in ipairs(self.repeats) do
-        lg.setColor(0, 0, 255)
+    for _,v in ipairs(self._fakes) do
+        lg.setColor(v.color)
         lg.rectangle(
             'fill',
-            (self.position.x + v.y * self.size) - 1,
-            (self.position.y + v.x * self.size) - 1,
-            self.size - 2,
-            self.size - 2)
+            v.x + 1,
+            v.y + 1,
+            v.w - 2,
+            v.h - 2)
     end
 end
 

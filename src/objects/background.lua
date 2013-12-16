@@ -33,7 +33,7 @@ end
 
 function Background:draw()
     lg.setColor(255, 255, 255)
-    lg.draw(self._canvas)
+    lg.draw(self._canvas, 1, 1)
 end
 
 return Background

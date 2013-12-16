@@ -14,6 +14,7 @@ function Tetromino:init(x, y, width, height, ps)
     self.canvas = lg.newCanvas(
         self.width * 4,
         self.height * 2)
+    self.color = { 255, 255, 255, 255 }
 
     self.canvas:renderTo(function ()
         local r, c = 0, 0
@@ -45,6 +46,9 @@ function Tetromino:getBoundingBox()
 end
 
 function Tetromino:draw()
+    print(self.canvas, self.position.x, self.position.y, unpack(self.color))
+
+    lg.setColor(self.color)
     lg.draw(
         self.canvas,
         self.position.x,
