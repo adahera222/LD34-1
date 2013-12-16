@@ -12,7 +12,7 @@ function Screen:init(rows, columns, size, ms)
     self.repeats = 0
 
     self._grid = {}
-    self._fakes = {}
+    --self._fakes = {}
 
     local r, c = 0, 0
     for line in ms:gmatch'[^\n]+' do
@@ -32,6 +32,7 @@ function Screen:init(rows, columns, size, ms)
 
             if not self._grid[r][c].filled then
                 self._grid[r][c].color = { 0, 0, 0, 255 }
+                --[=[
                 table.insert(self._fakes, {
                     x = c * self.size,
                     y = r * self.size,
@@ -39,6 +40,7 @@ function Screen:init(rows, columns, size, ms)
                     h = self.size,
                     color = { 255, 255, 255, 255 },
                 })
+                ]=]
             end
 
             c = c + 1
@@ -48,6 +50,7 @@ function Screen:init(rows, columns, size, ms)
     end
 end
 
+--[=[
 function Screen:start()
     for _,v in ipairs(self._fakes) do
         local ny = v.y + lg.getHeight()
@@ -62,10 +65,10 @@ function Screen:start()
                     v.color[3],
                     0
                 },
-            },
-            'inCirc')
+            })
     end
 end
+]=]
 
 function Screen:update(dt)
     for r = 0, self.rows - 1 do
@@ -105,13 +108,18 @@ function Screen:applyPlank(plank)
             if plank.grid[r][c] then
                 local nr, nc = plank:transformCoordinates(r, c)
 
-                local tile = self._grid[pr + nr][pc + nc]
-                if tile.filled then
-                    self.repeats = self.repeats + 1
-                    tile.color = { 0, 0, 255, 255 }
-                else
-                    tile.filled = true
-                    tile.color = { 255, 255, 255, 255 }
+                if pr + nr < self.rows and 
+                   pr + nr >= 0 then
+                    local tile = self._grid[pr + nr][pc + nc]
+                    if tile then
+                        if tile.filled then
+                            self.repeats = self.repeats + 1
+                            tile.color = { 0, 0, 255, 255 }
+                        else
+                            tile.filled = true
+                            tile.color = { 255, 255, 255, 255 }
+                        end
+                    end
                 end
             end
         end
@@ -124,9 +132,13 @@ function Screen:hover(plank)
     for r = 0, plank.rows - 1 do
         for c = 0, plank.columns - 1 do
             local nr, nc = plank:transformCoordinates(r, c)
-
-            local tile = self._grid[pr + nr][pc + nc]
-            tile.hover = plank.grid[r][c]
+            if pr + nr < self.rows and 
+               pr + nr >= 0 then
+                local tile = self._grid[pr + nr][pc + nc]
+                if tile then
+                    tile.hover = plank.grid[r][c]
+                end
+            end
         end
     end
 end
@@ -150,6 +162,7 @@ function Screen:draw()
         end
     end
 
+    --[=[
     for _,v in ipairs(self._fakes) do
         lg.setColor(v.color)
         lg.rectangle(
@@ -159,6 +172,7 @@ function Screen:draw()
             v.w - 2,
             v.h - 2)
     end
+    ]=]
 end
 
 return Screen

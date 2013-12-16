@@ -6,12 +6,11 @@ local Tween = require 'lib.tween.tween'
 
 local AnimatedBackground = require 'src.aesthetics.animbackground'
 local Button = require 'src.aesthetics.button'
-local Play = require 'src.states.play'
 
 local Title = {}
 
 function Title:init()
-    local ms =
+    self.ms =
         [[11111111111111111111
           11111111111111111111
           11100001100101110111
@@ -32,18 +31,22 @@ function Title:init()
           11111111111111111111
           11111111111111111111
           11111111111111111111]]
+end
+
+function Title:enter(previous, ...)
+    print('Entering Title...')
 
     self.abg = AnimatedBackground(
         math.ceil(lg.getHeight() / 20),
         math.ceil(lg.getWidth() / 20),
         20,
-        ms)
+        self.ms)
 
     self.fbg = AnimatedBackground(
         math.ceil(lg.getHeight() / 20),
         math.ceil(lg.getWidth() / 20),
         20,
-        ms)
+        self.ms)
 
     self.fbg.start = function (self)
         for r = 0, self.rows - 1 do
@@ -118,9 +121,7 @@ function Title:init()
     self.buttons[3]:setCallback(function ()
         love.event.quit()
     end)
-end
 
-function Title:enter(previous, ...)
     self.abg:start()
 
     for _,button in ipairs(self.buttons) do
@@ -140,6 +141,10 @@ function Title:enter(previous, ...)
 end
 
 function Title:leave()
+    print('Leaving Title...')
+
+    self.abg = nil
+    self.buttons = nil
 end
 
 function Title:update(dt)

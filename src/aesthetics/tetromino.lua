@@ -46,8 +46,6 @@ function Tetromino:getBoundingBox()
 end
 
 function Tetromino:draw()
-    print(self.canvas, self.position.x, self.position.y, unpack(self.color))
-
     lg.setColor(self.color)
     lg.draw(
         self.canvas,

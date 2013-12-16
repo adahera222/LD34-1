@@ -7,8 +7,6 @@ local Gamestate = require 'lib.hump.gamestate'
 local Plank = require 'src.objects.plank'
 local Screen = require 'src.objects.screen'
 
-local Choose = require 'src.states.choose'
-
 local Play = {}
 
 function Play:init()
@@ -22,8 +20,6 @@ function Play:init()
         local contents = lf.read(dir .. file)
         self.levels[i] = contents
     end
-
-    self.testms = lf.read(dir .. 'test.txt')
 end
 
 function Play:enter(previous, cl)
@@ -33,13 +29,14 @@ function Play:enter(previous, cl)
 
     Gamestate.push(Choose)
 
-    self.screen = Screen(20, 20, 20, self.testms)
+    self.screen = Screen(20, 20, 20, self.levels[self.currentLevel])
 end
 
 function Play:leave()
     print('Leaving Play...')
 
     self.screen = nil
+    self.start = nil
 end
 
 function Play:update(dt)
@@ -56,22 +53,17 @@ function Play:update(dt)
         if self.currentLevel < #self.levels then
             Gamestate.switch(Play, self.currentLevel + 1)
         else
+            Gamestate.switch(Finish, self.totalRepeats, love.timer.getTime() - self.start)
         end
     end
 end
 
 function Play:draw()
-    print('Play.draw')
-
     self.screen:draw()
 end
 
 function Play:keypressed(key, code)
     self.plank:keypressed(key, code)
-
-    if key == ' ' then
-        Gamestate.switch(Play)
-    end
 end
 
 function Play:mousereleased(x, y, button)
@@ -79,15 +71,13 @@ function Play:mousereleased(x, y, button)
 end
 
 function Play:setPlank(ps)
+    self.start = love.timer.getTime()
+
     self.plank = Plank(
         lm.getX(),
         lm.getY(),
         20,
         ps)
-end
-
-function Play:startAnimation()
-    self.screen:start()
 end
 
 return Play

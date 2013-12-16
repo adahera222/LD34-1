@@ -84,25 +84,25 @@ function Choose:enter(previous, ...)
                         3,
                         tile,
                         { x = ox },
-                        'inCubic')
+                        'outCubic')
                 elseif c == 7 or c == (self.columns - 1) - 7 then
                     Tween(
                         3.25,
                         tile,
                         { x = ox },
-                        'inCubic')
+                        'outCubic')
                 elseif c == 8 or c == (self.columns - 1) - 8 then
                     Tween(
                         3.5,
                         tile,
                         { x = ox },
-                        'inCubic')
+                        'outCubic')
                 elseif c == 9 or c == (self.columns - 1) - 9 then
                     Tween(
                         3.75,
                         tile,
                         { x = ox },
-                        'inCubic')
+                        'outCubic')
                 end
             end
         end
@@ -117,10 +117,6 @@ function Choose:enter(previous, ...)
 
     table.remove(self.chosen, math.random(#self.chosen))
     table.remove(self.chosen, math.random(#self.chosen))
-
-    for i,v in ipairs(self.chosen) do
-        print(i, v)
-    end
 
     local tw = self.plate.w / 6
     local th = self.plate.h / 10
@@ -152,26 +148,23 @@ function Choose:enter(previous, ...)
                 Tween(
                     1.75,
                     t.color,
-                    { 255, 255, 255, 255 },
-                    'linear',
-                    print,
-                    'FINISHED: ' .. i)
+                    { 255, 255, 255, 255 })
             end)
     end
-
-    print(#self.tetrominos)
 end
 
 function Choose:leave()
     print('Leaving Choose...')
 
-    self.previous:setPlank(self.tetrominos[self.selected].ps)
+    if self.selected == -1 then
+        self.previous:setPlank()
+    else
+        self.previous:setPlank(self.tetrominos[self.selected].ps)
+    end
 
     self.abg = nil
     self.tetrominos = nil
     self.chosen = nil
-
-    self.previous:startAnimation()
 end
 
 function Choose:draw()

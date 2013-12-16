@@ -2,7 +2,10 @@ local Gamestate = require 'lib.hump.gamestate'
 local Timer = require 'lib.hump.timer'
 local Tween = require 'lib.tween.tween'
 
-local Title = require 'src.states.title'
+Title = require 'src.states.title'
+Play = require 'src.states.play'
+Choose = require 'src.states.choose'
+Finish = require 'src.states.finish'
 
 function love.load()
     local font =
